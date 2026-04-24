@@ -170,94 +170,28 @@ These values are **not questions asked to the end consumer**. They are measured 
 
 #### Serum Biochemistry
 
-| Marker | Acronym | Units | Manufacturer/Analyzer Analytical Range (non-UKB) | UKB observed range | Model Panel | Pilot backend name | HY backend name | UKB source |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Albumin | ALB | g/L | 15–60 | 17.38–59.8 | HY only | `-` | `b_albumin` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30600 |
-| Alanine Aminotransferase | ALT | U/L | 3–500 | 3.01–495.19 | Both | `b_alanine_aminotransferase` | `b_alanine_aminotransferase` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30620 |
-| Alkaline Phosphatase | ALP | U/L | 5–1500 | 8–1416.7 | Both | `b_alkaline_phosphatase` | `b_alkaline_phosphatase` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30610 |
-| Apolipoprotein A1 | APOA1 | g/L | 0.4–2.5 | 0.419–2.5 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30630 |
-| Apolipoprotein B | APOB | g/L | 0.4–2 | 0.4–2 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30640 |
-| Aspartate Aminotransferase | AST | U/L | 3–1000 | 3.3–947.2 | Both | `b_aspartate_aminotransferase` | `b_aspartate_aminotransferase` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30650 |
-| Calcium | CALC | mmol/L | 1–5 | 1.05–3.611 | Both | `b_calcium` | `b_calcium` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30680 |
-| Cholesterol, Total | CHOL | mmol/L | 0.5–18 | 0.601–15.46 | Both | `b_cholesterol` | `b_cholesterol` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30690 |
-| Creatinine | CREA | µmol/L | 0–4420 | 10.7–1499.3 | Pilot only | `b_creatinine` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30700 |
-| Cystatin C | CYSC | mg/L | 0.1–8.99 | 0.295–7.487 | HY only | `-` | `b_cystatin_c` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30720 |
-| Direct Bilirubin | DBIL | µmol/L | 0–171 | 1–70.06 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30660 |
-| Gamma-Glutamyltransferase | GGT | U/L | 5–1200 | 5–1184.9 | Both | `b_gamma_glutamyltransferase` | `b_gamma_glutamyltransferase` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30730 |
-| Glucose | GLU | mmol/L | 0.6–45 | 0.995–36.813 | Pilot only | `b_glucose` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30740 |
-| High Density Lipoprotein | HDL | mmol/L | 0.05–4.65 | 0.219–4.401 | Both | `b_hdl_cholesterol` | `b_hdl_cholesterol` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30760 |
-| High Sensitivity C-Reactive Protein | CRP | mg/L | 0.08–80 | 0.08–79.96 | Both | `b_c_reactive_protein` | `b_c_reactive_protein` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30710 |
-| Insulin-like Growth Factor-1 | IGF-1 | nmol/L | 1.3–195 | 1.445–126.766 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30770 |
-| Lipoprotein (a) | LP-a | nmol/L | 5.76–189 | 3.8–189 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30790 |
-| Low Density Lipoprotein | LDL | mmol/L | 0.26–10.3 | 0.266–9.797 | Both | `b_ldl_direct` | `b_ldl_direct` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30780 |
-| Oestradiol | OEST | pmol/L | 73–17621 | 175–14588 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30800 |
-| Phosphate | PHOS | mmol/L | 0.32–6.4 | 0.369–4.702 | Both | `b_phosphate` | `b_phosphate` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30810 |
-| Rheumatoid Factor | RF | IU/mL | 10–120 | 10–120 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30820 |
-| Sex Hormone Binding Globulin | SHBG | nmol/L | 0.33–242 | 0.39–241.92 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30830 |
-| Testosterone | TEST | nmol/L | 0.35–55.52 | 0.35–54.342 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30850 |
-| Total Bilirubin | TBIL | µmol/L | 0–513 | 1.08–144.52 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30840 |
-| Total Protein | TP | g/L | 30–120 | 36.27–117.36 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30860 |
-| Triglyceride | TRIG | mmol/L | 0.1–11.3 | 0.231–11.278 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30870 |
-| Urea | UREA | mmol/L | 0.8–50 | 0.81–41.83 | Pilot only | `b_urea` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30670 |
-| Uric Acid | UA | µmol/L | 89–1785 | 89.1–1067.5 | HY only | `-` | `b_urate` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30880 |
-| Vitamin D | VITD | nmol/L | 10–375 | 10–362 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30890 |
+| Marker | Acronym | Units | Manufacturer/Analyzer Analytical Range |
+| --- | --- | --- | --- | 
+| Albumin | ALB | g/L | 15–60 | 
+| Alanine Aminotransferase | ALT | U/L | 3–500 | 
+| Alkaline Phosphatase | ALP | U/L | 5–1500 | 
+| Aspartate Aminotransferase | AST | U/L | 3–1000 | 
+| Calcium | CALC | mmol/L | 1–5 | 
+| Cholesterol, Total | CHOL | mmol/L | 0.5–18 | 
+| Cystatin C | CYSC | mg/L | 0.1–8.99 | 
+| Gamma-Glutamyltransferase | GGT | U/L | 5–1200 | 
+| High Density Lipoprotein | HDL | mmol/L | 0.05–4.65 | 
+| High Sensitivity C-Reactive Protein | CRP | mg/L | 0.08–80 |
+| Low Density Lipoprotein | LDL | mmol/L | 0.26–10.3 | 
+| Phosphate | PHOS | mmol/L | 0.32–6.4 | 
+| Uric Acid | UA | µmol/L | 89–1785 | 
 
 #### Glycated Haemoglobin (HbA1c)
 
-| Marker | Acronym | Units | Manufacturer/Analyzer Analytical Range (non-UKB) | UKB observed range | Model Panel | Pilot backend name | HY backend name | UKB source |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Glycated Haemoglobin | HbA1c | mmol/mol | 15–184 | 15–515.2 | HY only | `-` | `b_hba1c` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30750 |
+| Marker | Acronym | Units | Manufacturer/Analyzer Analytical Range  | 
+| --- | --- | --- | --- | 
+| Glycated Haemoglobin | HbA1c | mmol/mol | 15–184 | 
 
-#### Haematology — Complete Blood Count (CBC)
-
-| Marker | Acronym | Units | Manufacturer/Analyzer Analytical Range (non-UKB) | UKB observed range | Model Panel | Pilot backend name | HY backend name | UKB source |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Haematocrit | HCT | % | — | 0.05–72.48 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30030 |
-| Haemoglobin Concentration | HGB | g/dL | 0.0–25.0 | 0.09–22.27 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30020 |
-| Mean Corpuscular Haemoglobin | MCH | pg | — | 0–95.67 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30050 |
-| Mean Corpuscular Haemoglobin Concentration | MCHC | g/dL | — | 10.7–97.3 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30060 |
-| Mean Corpuscular Volume | MCV | fL | 0.0–150.0 | 52.1–160.3 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30040 |
-| Mean Platelet Volume | MPV | fL | — | 5.73–16.5 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30100 |
-| Platelet crit | PCT | % | — | 0–1.445 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30090 |
-| Platelet count | PLT | ×10⁹/L | 0–3000 | 0.3–1821 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30080 |
-| Platelet Distribution Width | PDW | % | — | 13.27–20.2 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30110 |
-| Red Blood Cell count | RBC | ×10¹²/L | 0.00–8.00 | 0.006–7.911 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30010 |
-| Red Cell Distribution Width | RDW | % | — | 2.28–38.96 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30070 |
-| White Blood Cell count | WBC | ×10⁹/L | 0.00–400.00 | 0–389.7 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30000 |
-
-#### Haematology — Leukocyte Differential
-
-| Marker | Acronym | Units | Manufacturer/Analyzer Analytical Range (non-UKB) | UKB observed range | Model Panel | Pilot backend name | HY backend name | UKB source |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Basophil number | BA# | ×10⁹/L | 0.00–400.00 | 0–3.03 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30160 |
-| Basophil percent | BA% | % | 0–100 | 0–33.8 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30220 |
-| Eosinophil number | EO# | ×10⁹/L | 0.00–400.00 | 0–9.6 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30150 |
-| Eosinophil percent | EO% | % | 0–100 | 0–100 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30210 |
-| Lymphocyte number | LY# | ×10⁹/L | 0.00–400.00 | 0–196.41 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30120 |
-| Lymphocyte percent | LY% | % | 0–100 | 0–98.7 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30180 |
-| Monocyte number | MO# | ×10⁹/L | 0.00–400.00 | 0–113.39 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30130 |
-| Monocyte percent | MO% | % | 0–100 | 0–96.9 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30190 |
-| Neutrophil number | NE# | ×10⁹/L | 0.00–400.00 | 0–76.42 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30140 |
-| Neutrophil percent | NE% | % | 0–100 | 0–100 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30200 |
-
-#### Haematology — Reticulocytes
-
-| Marker | Acronym | Units | Manufacturer/Analyzer Analytical Range (non-UKB) | UKB observed range | Model Panel | Pilot backend name | HY backend name | UKB source |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| High Light Scatter Reticulocytes number | HLR# | ×10¹²/L | — | 0–0.6 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30300 |
-| High Light Scatter Reticulocytes percent | HLR% | % | — | 0–80 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30290 |
-| Immature Reticulocyte Fraction | IRF | Ratio | — | 0–1 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30280 |
-| Mean Reticulocyte Volume | MRV | fL | — | 46–249.45 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30260 |
-| Mean Sphered Cell Volume | MSCV | fL | — | 43.31–205.2 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30270 |
-| Reticulocyte number | RET# | ×10¹²/L | 0.0000–0.7500 | 0–2.433 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30250 |
-| Reticulocyte percent | RET% | % | 0.00–30.0 | 0–90.909 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30240 |
-
-#### Haematology — Nucleated Red Blood Cells (NRBC)
-
-| Marker | Acronym | Units | Manufacturer/Analyzer Analytical Range (non-UKB) | UKB observed range | Model Panel | Pilot backend name | HY backend name | UKB source |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Nucleated Red Blood Cell number | NRBC# | ×10⁹/L | — | 0–6.9 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30170 |
-| Nucleated Red Blood Cell percent | NRBC% | % | 0.0–600 | 0–81.97 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30230 |
 
 ## 5) B2B API Payload Guidance
 
@@ -281,51 +215,3 @@ For each field, consult the **Internal details** column (Health Questionnaire) o
 - If Current smoker and `How often do you smoke cigarettes? = On most or all days`: do not ask; send `null` to Idunox
 - Otherwise: ask and send the end consumer’s answer to Idunox
 
-## 6) Markers that will be derived by our pipeline
-
-The following backend markers are computed by the pipeline from the API inputs above and do not map 1:1 to a single input field. **These are provided for information only — the B2B partner does not need to submit these values; Idunox derives them automatically from the inputs in Sections 2 and 4.**
-
-### Pilot-Specific Derived Features
-
-| Derived Feature | Calculation | Input Fields |
-| --- | --- | --- |
-| `b_ast_alt_ratio` | `AST / ALT` | AST, ALT |
-| `b_bun_creatinine_ratio` | `(Urea * 2.8) / Creatinine` | Urea, Creatinine |
-| `b_calcium_phosphate_product` | Calcium × Phosphate | Calcium, Phosphate |
-| `b_egfr_ckd_epi_2021_cr` | `Scr_mg_dL = Creatinine_umol_L / 88.4` `k = 0.7 (female), 0.9 (male)` `a = -0.241 (female), -0.302 (male)` `eGFR = 142 * min(Scr_mg_dL / k, 1)^a * max(Scr_mg_dL / k, 1)^(-1.200) * 0.9938^Age * (1.012 if female else 1)` | Creatinine, Age, Sex |
-| `b_ggt_alt_ratio` | `GGT / ALT` | GGT, ALT |
-| `b_ldl_hdl_ratio` | `LDL_Direct / HDL_Cholesterol` | LDL Direct, HDL Cholesterol |
-| `b_non_hdl_cholesterol` | `Total_Cholesterol - HDL_Cholesterol` | Total Cholesterol, HDL Cholesterol |
-| `lr_bmi` | `Weight_kg / (Height_cm / 100)^2` | Weight, Height |
-| `lr_ever_smoked_yes` | `Yes` if `smoking_status` in {`Current smoker`, `Former smoker`}, else `No` | Smoking status |
-| `lr_pack_years_of_smoking` | Case logic: `Never smoker` -> `0` `Current smoker` and `current_tobacco_smoking = On most or all days` -> `(current_daily_cigarettes / 20) * (Age - Age_started_smoking)` `Former smoker` and `past_tobacco_smoking = On most or all days` -> `(past_daily_cigarettes / 20) * (Age_stopped_smoking - Age_started_smoking)` Otherwise -> `0` | Current/past cigarettes, Start age, Stop age (for formers), Age |
-| `lr_smoking_duration_years` | Case logic: `Never smoker` -> `0` `Current smoker` and `current_tobacco_smoking = On most or all days` -> `Age - Age_started_smoking` `Former smoker` and `past_tobacco_smoking = On most or all days` -> `Age_stopped_smoking - Age_started_smoking` Otherwise -> `0` | Age, Start smoking age, Stop smoking age |
-
-### HY-Specific Derived Features
-
-| Derived Feature | Calculation | Input Fields |
-| --- | --- | --- |
-| `b_ast_to_alt_ratio` | `AST / ALT` | AST, ALT |
-| `b_calcium_corrected_by_albumin` | `Calcium + 0.02 * (40 - Albumin)` if `Albumin < 40` else `Calcium` | Calcium, Albumin |
-| `b_calcium_phosphate_product` | Calcium × Phosphate | Calcium, Phosphate |
-| `b_chol_hdl` | `HDL_Cholesterol` | HDL Cholesterol (pass-through) |
-| `b_chol_ldl` | `LDL_Direct` | LDL Direct (pass-through) |
-| `b_chol_non_hdl` | `Total_Cholesterol - HDL_Cholesterol` | Total Cholesterol, HDL Cholesterol |
-| `b_chol_remnant` | `Total_Cholesterol - LDL_Direct - HDL_Cholesterol` | Total Cholesterol, LDL Direct, HDL Cholesterol |
-| `b_chol_total` | `Total_Cholesterol` | Total Cholesterol (pass-through) |
-| `b_chol_total_to_hdl_ratio` | `Total_Cholesterol / HDL_Cholesterol` | Total Cholesterol, HDL Cholesterol |
-| `b_egfr_ckd_epi_2012_cys` | `Scys = CystatinC_mg_L` `eGFR = 133 * min(Scys / 0.8, 1)^(-0.499) * max(Scys / 0.8, 1)^(-1.328) * 0.996^Age * (0.932 if female else 1)` | Cystatin C, Age, Sex |
-| `b_ggt_to_alt_ratio` | `GGT / ALT` | GGT, ALT |
-| `b_ldl_hdl_ratio` | `LDL_Direct / HDL_Cholesterol` | LDL Direct, HDL Cholesterol |
-| `b_non_hdl_cholesterol` | `Total_Cholesterol - HDL_Cholesterol` | Total Cholesterol, HDL Cholesterol |
-| `lr_bmi` | `Weight_kg / (Height_cm / 100)^2` | Weight, Height |
-| `lr_ever_smoked_yes` | `Yes` if `smoking_status` in {`Current smoker`, `Former smoker`}, else `No` | Smoking status |
-| `lr_pack_years_of_smoking` | Case logic: `Never smoker` -> `0` `Current smoker` and `current_tobacco_smoking = On most or all days` -> `(current_daily_cigarettes / 20) * (Age - Age_started_smoking)` `Former smoker` and `past_tobacco_smoking = On most or all days` -> `(past_daily_cigarettes / 20) * (Age_stopped_smoking - Age_started_smoking)` Otherwise -> `0` | Current/past cigarettes, Start age, Stop age (for formers), Age |
-| `lr_smoking_duration_years` | Case logic: `Never smoker` -> `0` `Current smoker` and `current_tobacco_smoking = On most or all days` -> `Age - Age_started_smoking` `Former smoker` and `past_tobacco_smoking = On most or all days` -> `Age_stopped_smoking - Age_started_smoking` Otherwise -> `0` | Age, Start smoking age, Stop smoking age |
-
-### Notes on Derivation
-
-- **Ratios:** All ratio calculations treat division by zero as missing; if denominator is 0 or missing, result is `null`.
-- **Pack-years and smoking duration:** The duration component used by both `lr_pack_years_of_smoking` and `lr_smoking_duration_years` is calculated as years from start age to current age (current smokers) or to stop age (former smokers).
-- **eGFR formulas:** The exact CKD-EPI equations used above are race-free. Inputs are Age, Sex, and the corresponding biomarker (Creatinine or Cystatin C).
-- **Calcium correction:** For HY only; the albumin correction formula is applied when albumin levels suggest hypoalbuminaemia.
