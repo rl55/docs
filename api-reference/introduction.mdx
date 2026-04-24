@@ -1,33 +1,332 @@
 ---
-title: 'Introduction'
-description: 'Example section for showcasing API endpoints'
+title: 'B2B partner questionnaire reference'
+description: 'Internal reference for B2B partner intake questionnaires, blood markers, API payload guidance, and derived markers.'
 ---
 
-<Note>
-  If you're not looking to build API reference documentation, you can delete
-  this section by removing the api-reference folder.
-</Note>
+Last updated: 2026-04-15
 
-## Welcome
+## Table of Contents
 
-There are two ways to build API documentation: [OpenAPI](https://mintlify.com/docs/api-playground/openapi/setup) and [MDX components](https://mintlify.com/docs/api-playground/mdx/configuration). For the starter kit, we are using the following OpenAPI specification.
+- [1) Document Overview & Purpose](#document-overview-purpose)
+- [2) Health Questionnaire Markers](#health-questionnaire-markers)
+- [3) Graphical Conditional Question Trees](#graphical-conditional-question-trees)
+- [4) Blood Markers](#blood-markers)
+- [5) B2B API Payload Guidance](#b2b-api-payload-guidance)
+- [6) Markers that will be derived by our pipeline](#markers-that-will-be-derived-by-our-pipeline)
 
-<Card
-  title="Plant Store Endpoints"
-  icon="leaf"
-  href="https://github.com/mintlify/starter/blob/main/api-reference/openapi.json"
->
-  View the OpenAPI specification file
-</Card>
+## 1) Document Overview & Purpose
 
-## Authentication
+This document defines **what B2B partners need to ask their end consumers** in order to collect the data required for an IduScore report. It covers question wording, conditionality (which questions to show and when), accepted values, and how each answer maps to the Idunox data model.
 
-All API endpoints are authenticated using Bearer tokens and picked up from the specification file.
+This document covers both active panels:
 
-```json
-"security": [
-  {
-    "bearerAuth": []
-  }
-]
+| Panel | Details |
+| --- | --- |
+| **IduScore Pilot** | v11.2 model used in the Usability Test from Q1 2026 |
+| **IduScore Health Yourself** | Version shipped to our first B2B partner Health Yourself |
+
+**Scope (this document vs API contract):**
+
+- This document defines questionnaire and marker requirements for partners: what to ask or collect, accepted values/ranges, conditional questionnaire flow, and which features are derived by the Idunox pipeline.
+- This document is not the API contract. API endpoint URLs, authentication, request/response envelope, error codes, report delivery, and webhook/notification behavior are documented separately in the API contract.
+
+---
+
+## 2) Health Questionnaire Markers
+
+This section contains all questions that B2B partners must present to the end consumer in their intake form. Each row represents a question or field to be collected from the end consumer.
+
+### Column Descriptions
+
+| Column | Description |
+| --- | --- |
+| **Marker** | The question/field name as it should appear in the intake form |
+| **Type** | Data type: `string`, `number`, `string/null`, `number/null` |
+| **Accepted values / range** | Valid responses (e.g., `Yes`, `No`, or numeric ranges like `0..120`) |
+| **Requirement / conditionality** | Whether this question is asked to **all end consumers** or only under **certain conditions**. This determines the intake form’s **questionnaire flow** (which questions are shown/asked). **“Required”** → all end consumers are asked (no conditions). **“Conditional: required when X”** → the question is asked only if the condition is met in the form’s questionnaire flow (e.g., “when smoking status is Current smoker”). **“else send null” / “else send No”** → when the condition is not met, the value to include in the API payload sent to Idunox (apply in backend logic). |
+| **User-facing explanation** | Helper text/tooltip shown to end consumers |
+| **Internal details** | Implementation notes: branch logic, API submission guidance, conditional semantics |
+| **Pilot backend name** | Backend field name for Pilot panel |
+| **HY backend name** | Backend field name for HY panel |
+| **UKB source** | UK Biobank field reference |
+
+### Questions
+
+| Marker | Type | Accepted values / range | Requirement / conditionality | User-facing explanation | Internal details | Pilot backend name | HY backend name | UKB source |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `Sex at birth` | string | `Male`, `Female` | Required | - | Maps to sex-at-birth field for model feature generation | `lr_gender_female` | `lr_gender_female` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=31 |
+| `Age (Years)` | number | `0..120` | Required | - | Integer/float accepted; age anchor for risk context | `lr_age_at_sampling` | `lr_age_at_sampling` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=21022 |
+| `Weight (Kilograms, kg)` | number | `0..300` | Required | - | Used with height to derive BMI | `lr_weight` | `lr_weight` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=21002 |
+| `Height (Centimeters, cm)` | number | `0..250` | Required | - | Used with weight to derive BMI | `lr_standing_height` | `lr_standing_height` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=50 |
+| `In general how would you rate your overall health?` | string | `Excellent`, `Good`, `Fair`, `Poor` | Required | Self-rated health helps capture important issues that biomarkers and other questions may miss. | Categorical self-rated health | `lr_overall_health_rating` | `lr_overall_health_rating` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=2178 |
+| `In terms of cigarette smoking, which case are you?` | string | `Current smoker`, `Former smoker`, `Never smoker` | Required | Select ‘Never smoker’ only if you have never smoked a single cigarette in your life. | This is the root of the smoking questions tree and determines whether current-smoking follow-up is shown. | `lr_smoking_status` | `lr_smoking_status` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=20116 |
+| `In the past, how often have you smoked cigarettes?` | string/null | `I have never smoked`, `Just tried once or twice`, `Only occasionally`, `On most or all days` | Conditional: required when smoking status is `Former smoker`, or when smoking status is `Current smoker` AND current tobacco smoking (Field 1239) is `Only occasionally` (send value); if smoking status is `Never smoker`, send `"I have never smoked"`; if current tobacco smoking is `On most or all days`, send `null` | - | Partner-flow adaptation of UKB Field 1249 for cleaner UX in never-smokers: never-smoker branch is auto-set to `I have never smoked` without re-asking. For end consumers asked this question, `Just tried once or twice` or `Only occasionally` ends the former-smoker follow-up branch; `On most or all days` triggers additional former-smoker follow-up questions when smoking status is `Former smoker`. | `lr_past_tobacco_smoking` | `lr_past_tobacco_smoking` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=1249 |
+| `How often do you smoke cigarettes?` | string | `Only occasionally`, `On most or all days`, `No` | Conditional: required when smoking status is `Current smoker` (send value); else send `No` | - | Current smoking frequency. For current smokers: `Only occasionally` ends the current-smoker follow-up branch; `On most or all days` triggers additional follow-up questions. | `lr_current_tobacco_smoking` | `lr_current_tobacco_smoking` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=1239 |
+| `How many cigarettes do you smoke on average each day?` | number/null | `1..200` | Conditional: required when smoking status is `Current smoker` AND current tobacco smoking is `On most or all days` (send value); else send `null` | - | Current daily amount | `lr_number_of_cigarettes_currently_smoked_daily_current_cigarette_smokers` | `lr_number_of_cigarettes_currently_smoked_daily_current_cigarette_smokers` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=3456 |
+| `How many cigarettes did you smoke on average each day?` | number/null | `1..200` | Conditional: required when smoking status is `Former smoker` AND past tobacco smoking is `On most or all days` (send value); else send `null` | - | Past daily amount | `lr_number_of_cigarettes_previously_smoked_daily` | `lr_number_of_cigarettes_previously_smoked_daily` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=2887 |
+| `At what age did you stop smoking cigarettes?` | number/null | `0..120` | Conditional: required when smoking status is `Former smoker` AND past tobacco smoking is `On most or all days` (send value); else send `null` | - | Smoking cessation age | `lr_age_stopped_smoking` | `lr_age_stopped_smoking` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=2897 |
+| `At what age did you start smoking cigarettes?` | number/null | `0..120` | Conditional: required when (smoking status is `Current smoker` AND current tobacco smoking is `On most or all days`) OR (smoking status is `Former smoker` AND past tobacco smoking is `On most or all days`) (send value); else send `null` | - | Start age (current/former variants) | `lr_age_started_smoking_in_current_smokers`, `lr_age_started_smoking_in_former_smokers` | `lr_age_started_smoking_in_current_smokers`, `lr_age_started_smoking_in_former_smokers` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=3436 and https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=2867 |
+| `Has a doctor ever told you that you have or have had diabetes?` | string | `Yes`, `No` | Required | Select “Yes” if you have any of these conditions: Type 1 (also known as insulin-dependent), Type 2 (also known as non-insulin-dependent), gestational diabetes, diabetes related to malnutrition or pancreatitis, steroid-induced diabetes, maturity-onset diabetes (MODY), or an unknown type of diabetes. Select “No” if none of those apply. | - | `pd_diabetes_simplified` | `pd_diabetes_simplified` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=2443 |
+| `Has a doctor ever told you that you have or have had dementia?` | string | `Yes`, `No` | Required | Select “Yes” if you have any of these conditions: Alzheimer’s disease, Vascular dementia, Frontotemporal dementia, Dementia with Lewy bodies, Dementia in other diseases (for example, Parkinson’s disease, Huntington’s disease, prion disease, HIV), or Unknown dementia type. Select “No” if none of those apply. | - | `pd_dementia_all` | `pd_dementia_all` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=20002 (composite mapping) |
+| `Has a doctor ever told you that you have or have had any cardiovascular or brain blood vessel disease?` | string | `Yes`, `No` | Required | Select “Yes” if you have any of these conditions: angina or other ischaemic heart disease, heart attack or myocardial infarction, stroke or cerebral infarction, bleeding in or around the brain, endocarditis, heart valve disease, heart block, cardiac arrest, paroxysmal tachycardia, atrial fibrillation or flutter, heart failure, or transient ischaemic attack TIA. Select “No” if none of those apply. | - | `pd_cvd_simplified` | `pd_cvd_simplified` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=6150 |
+| `Has a doctor ever told you that you have or have had lung cancer?` | string | `Yes`, `No` | Required | Select “Yes” if you have any of these conditions: lung cancer, bronchial cancer, tracheal cancer, carcinoma in situ of the lung or bronchus, cancer in another or unspecified part of the respiratory system or inside the chest. Select “No” if none of those apply. | - | `pd_cancer_grouped-lung-c33_c34_c39_d02_2_162_165-cancer` | `pd_cancer_grouped-lung-c33_c34_c39_d02_2_162_165-cancer` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=20001 (composite mapping) |
+| `Has a doctor ever told you that you have or have had chronic kidney disease or end-stage kidney disease?` | string | `Yes`, `No` | Required | Select “Yes” if you have any of these conditions: chronic kidney disease of any stage (1 to 5), chronic renal failure or kidney failure, long-term dialysis such as haemodialysis or peritoneal dialysis, or a kidney transplant because of kidney failure. Select “No” if none of those apply. | - | `pd_ckd_all` | `pd_ckd_all` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=20002 (composite mapping) |
+| `Do you regularly take any of the following medications?` | string | `Yes`, `No` | Required | Select “Yes” if you take any of these medications: blood pressure medication, cholesterol-lowering medication, insulin, hormone replacement therapy, oral contraceptive pill, or mini-pill. Select “No” if none of those apply. | - | `lr_medication_for_cholesterol_blood_pressure_diabetes_or_take_exogenous_hormones_none_of_the_above` | `lr_medication_for_cholesterol_blood_pressure_diabetes_or_take_exogenous_hormones_none_of_the_above` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=6153 |
+| `Is your Biological Father still alive?` | string | `Yes`, `No`, `I do not know` | Required | - | Controls father age/death-age conditionals | `lr_father_still_alive_yes` | `lr_father_still_alive_yes` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=1797 |
+| `What was the age of your Biological Father when he died?` | number/null | `0..120` | Conditional: required when father still alive = `No` (send value); else send `null` | - | Father death age | `lr_fathers_age_at_death` | `lr_fathers_age_at_death` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=1807 |
+| `What is the age of your Biological Father?` | number/null | `0..120` | Conditional: required when father still alive = `Yes` (send value); else send `null` | - | Father current age | `lr_fathers_age` | `lr_fathers_age` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=2946 |
+| `Did your Biological Father ever have Alzheimer's disease or Dementia?` | string | `Yes`, `No` | Required | This question includes any subtype and any age at diagnosis. | Binary marker → `lr_illnesses_of_father_alzheimers_disease_dementia`; UKB Field 20107 Data-Coding 1010 | `lr_illnesses_of_father_alzheimers_disease_dementia` | `lr_illnesses_of_father_alzheimers_disease_dementia` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=20107 |
+| `Did your Biological Father ever have Diabetes?` | string | `Yes`, `No` | Required | This question includes any subtype and any age at diagnosis. | Binary marker → `lr_illnesses_of_father_diabetes`; UKB Field 20107 Data-Coding 1010 | `lr_illnesses_of_father_diabetes` | `lr_illnesses_of_father_diabetes` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=20107 |
+| `Did your Biological Father ever have Heart Disease?` | string | `Yes`, `No` | Required | This question includes any subtype and any age at diagnosis. | Binary marker → `lr_illnesses_of_father_heart_disease`; UKB Field 20107 Data-Coding 1010 | `lr_illnesses_of_father_heart_disease` | `lr_illnesses_of_father_heart_disease` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=20107 |
+| `Did your Biological Father ever have High Blood Pressure?` | string | `Yes`, `No` | Required | This question includes any subtype and any age at diagnosis. | Binary marker → `lr_illnesses_of_father_high_blood_pressure`; UKB Field 20107 Data-Coding 1010 | `lr_illnesses_of_father_high_blood_pressure` | `lr_illnesses_of_father_high_blood_pressure` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=20107 |
+| `Did your Biological Father ever have Lung Cancer?` | string | `Yes`, `No` | Required | This question includes any subtype and any age at diagnosis. | Binary marker → `lr_illnesses_of_father_lung_cancer`; UKB Field 20107 Data-Coding 1010 | `lr_illnesses_of_father_lung_cancer` | `lr_illnesses_of_father_lung_cancer` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=20107 |
+| `Did your Biological Father ever have a Stroke?` | string | `Yes`, `No` | Required | This question includes any subtype and any age at diagnosis. | Binary marker → `lr_illnesses_of_father_stroke`; UKB Field 20107 Data-Coding 1010 | `lr_illnesses_of_father_stroke` | `lr_illnesses_of_father_stroke` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=20107 |
+| `Is your Biological Mother still alive?` | string | `Yes`, `No`, `I do not know` | Required | - | Controls mother age/death-age conditionals | `lr_mother_still_alive_yes` | `lr_mother_still_alive_yes` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=1835 |
+| `What was the age of your Biological Mother when she died?` | number/null | `0..120` | Conditional: required when mother still alive = `No` (send value); else send `null` | - | Mother death age | `lr_mothers_age_at_death` | `lr_mothers_age_at_death` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=3526 |
+| `What is the age of your Biological Mother?` | number/null | `0..120` | Conditional: required when mother still alive = `Yes` (send value); else send `null` | - | Mother current age | `lr_mothers_age` | `lr_mothers_age` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=1845 |
+| `Did your Biological Mother ever have Alzheimer's disease or Dementia?` | string | `Yes`, `No` | Required | This question includes any subtype and any age at diagnosis. | Binary marker → `lr_illnesses_of_mother_alzheimers_disease_dementia`; UKB Field 20110 Data-Coding 1010 | `lr_illnesses_of_mother_alzheimers_disease_dementia` | `lr_illnesses_of_mother_alzheimers_disease_dementia` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=20110 |
+| `Did your Biological Mother ever have Diabetes?` | string | `Yes`, `No` | Required | This question includes any subtype and any age at diagnosis. | Binary marker → `lr_illnesses_of_mother_diabetes`; UKB Field 20110 Data-Coding 1010 | `lr_illnesses_of_mother_diabetes` | `lr_illnesses_of_mother_diabetes` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=20110 |
+| `Did your Biological Mother ever have Heart Disease?` | string | `Yes`, `No` | Required | This question includes any subtype and any age at diagnosis. | Binary marker → `lr_illnesses_of_mother_heart_disease`; UKB Field 20110 Data-Coding 1010 | `lr_illnesses_of_mother_heart_disease` | `lr_illnesses_of_mother_heart_disease` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=20110 |
+| `Did your Biological Mother ever have High Blood Pressure?` | string | `Yes`, `No` | Required | This question includes any subtype and any age at diagnosis. | Binary marker → `lr_illnesses_of_mother_high_blood_pressure`; UKB Field 20110 Data-Coding 1010 | `lr_illnesses_of_mother_high_blood_pressure` | `lr_illnesses_of_mother_high_blood_pressure` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=20110 |
+| `Did your Biological Mother ever have Lung Cancer?` | string | `Yes`, `No` | Required | This question includes any subtype and any age at diagnosis. | Binary marker → `lr_illnesses_of_mother_lung_cancer`; UKB Field 20110 Data-Coding 1010 | `lr_illnesses_of_mother_lung_cancer` | `lr_illnesses_of_mother_lung_cancer` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=20110 |
+| `Did your Biological Mother ever have a Stroke?` | string | `Yes`, `No` | Required | This question includes any subtype and any age at diagnosis. | Binary marker → `lr_illnesses_of_mother_stroke`; UKB Field 20110 Data-Coding 1010 | `lr_illnesses_of_mother_stroke` | `lr_illnesses_of_mother_stroke` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=20110 |
+
+---
+
+## 3) Graphical Conditional Question Trees
+
+The following diagrams show each questionnaire conditional tree independently.
+
+### Tree 1 — Smoking
+
+```mermaid
+%%{init: {'flowchart': {'curve': 'linear'}}}%%
+flowchart TD
+  S0["In terms of cigarette smoking, which case are you?"]
+  S0 -->|Never smoker| N0[Do not ask past-smoking frequency]
+  S0 -->|Current smoker| C0["How often do you smoke cigarettes?"]
+  S0 -->|Former smoker| F0["In the past, how often have you smoked cigarettes?"]
+
+  C0 -->|Only occasionally| F0
+  C0 -->|On most or all days| C1[Skip past-smoking frequency — send null for Field 1249]
+  C0 -->|On most or all days| C2["How many cigarettes do you smoke on average each day?"]
+  C0 -->|On most or all days| C3["At what age did you start smoking cigarettes?"]
+
+  F0 -->|Just tried once or twice| F1[Stop former-smoker follow-up]
+  F0 -->|Only occasionally| F1
+  F0 -->|On most or all days| F2["How many cigarettes did you smoke on average each day?"]
+  F0 -->|On most or all days| F3["At what age did you stop smoking cigarettes?"]
+  F0 -->|On most or all days| F4["At what age did you start smoking cigarettes?"]
+
+  N0 -. auto-set payload .-> A0[Set past-smoking frequency = I have never smoked]
+  S0 -. if not Current smoker .-> A1[Set current-smoking frequency = No]
+
 ```
+
+### Tree 2 — Biological Father
+
+```mermaid
+%%{init: {'flowchart': {'curve': 'linear'}}}%%
+flowchart TD
+  B0["Is your Biological Father still alive?"]
+  B0 -->|Yes| B1["What is the age of your Biological Father?"]
+  B0 -->|No| B2["What was the age of your Biological Father when he died?"]
+  B0 -->|I do not know| B3[Send null for father age and death-age fields]
+
+```
+
+### Tree 3 — Biological Mother
+
+```mermaid
+%%{init: {'flowchart': {'curve': 'linear'}}}%%
+flowchart TD
+  M0["Is your Biological Mother still alive?"]
+  M0 -->|Yes| M1["What is the age of your Biological Mother?"]
+  M0 -->|No| M2["What was the age of your Biological Mother when she died?"]
+  M0 -->|I do not know| M3[Send null for mother age and death-age fields]
+
+```
+
+---
+
+## 4) Blood Markers
+
+These values are **not questions asked to the end consumer**. They are measured from blood samples collected by the B2B partner’s clinical or laboratory workflow. The B2B partner is responsible for obtaining these measurements and including them in the data submission to Idunox.
+
+### Column Descriptions
+
+| Column | Description |
+| --- | --- |
+| **Marker** | Full name of the blood marker. |
+| **Acronym** | Short code used throughout this document and in API payload keys. |
+| **Units** | Measurement units the numeric value must be submitted in. |
+| **Manufacturer/Analyzer Analytical Range (non-UKB)** | The instrument or assay reportable range as specified by the manufacturer. Values outside this range may be flagged or rejected by the analyzer. This is independent of population norms. |
+| **UKB observed range** | Min–Max values actually observed in the UK Biobank cohort (population reference). Use this as a sanity-check on submitted values; extreme outliers beyond this range warrant data-quality review before submission. |
+| **Model Panel** | Whether this marker is an active model input or collected-only. Values: **Both** — used as input to both IduScore Pilot and IduScore Health Yourself models; **Pilot only** — used in IduScore Pilot model only; **HY only** — used in IduScore Health Yourself model only; **Collected** — measured and collected, but not currently used in any active model. |
+| **Pilot backend name** | The exact feature key expected by the IduScore Pilot XGBoost model. Use `-` if not used in Pilot. |
+| **HY backend name** | The exact feature key expected by the IduScore Health Yourself XGBoost model. Use `-` if not used in HY. |
+| **UKB source** | Link to the UK Biobank data field page where the marker definition and coding are documented. |
+
+### Markers
+
+#### Serum Biochemistry
+
+| Marker | Acronym | Units | Manufacturer/Analyzer Analytical Range (non-UKB) | UKB observed range | Model Panel | Pilot backend name | HY backend name | UKB source |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Albumin | ALB | g/L | 15–60 | 17.38–59.8 | HY only | `-` | `b_albumin` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30600 |
+| Alanine Aminotransferase | ALT | U/L | 3–500 | 3.01–495.19 | Both | `b_alanine_aminotransferase` | `b_alanine_aminotransferase` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30620 |
+| Alkaline Phosphatase | ALP | U/L | 5–1500 | 8–1416.7 | Both | `b_alkaline_phosphatase` | `b_alkaline_phosphatase` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30610 |
+| Apolipoprotein A1 | APOA1 | g/L | 0.4–2.5 | 0.419–2.5 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30630 |
+| Apolipoprotein B | APOB | g/L | 0.4–2 | 0.4–2 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30640 |
+| Aspartate Aminotransferase | AST | U/L | 3–1000 | 3.3–947.2 | Both | `b_aspartate_aminotransferase` | `b_aspartate_aminotransferase` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30650 |
+| Calcium | CALC | mmol/L | 1–5 | 1.05–3.611 | Both | `b_calcium` | `b_calcium` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30680 |
+| Cholesterol, Total | CHOL | mmol/L | 0.5–18 | 0.601–15.46 | Both | `b_cholesterol` | `b_cholesterol` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30690 |
+| Creatinine | CREA | µmol/L | 0–4420 | 10.7–1499.3 | Pilot only | `b_creatinine` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30700 |
+| Cystatin C | CYSC | mg/L | 0.1–8.99 | 0.295–7.487 | HY only | `-` | `b_cystatin_c` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30720 |
+| Direct Bilirubin | DBIL | µmol/L | 0–171 | 1–70.06 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30660 |
+| Gamma-Glutamyltransferase | GGT | U/L | 5–1200 | 5–1184.9 | Both | `b_gamma_glutamyltransferase` | `b_gamma_glutamyltransferase` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30730 |
+| Glucose | GLU | mmol/L | 0.6–45 | 0.995–36.813 | Pilot only | `b_glucose` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30740 |
+| High Density Lipoprotein | HDL | mmol/L | 0.05–4.65 | 0.219–4.401 | Both | `b_hdl_cholesterol` | `b_hdl_cholesterol` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30760 |
+| High Sensitivity C-Reactive Protein | CRP | mg/L | 0.08–80 | 0.08–79.96 | Both | `b_c_reactive_protein` | `b_c_reactive_protein` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30710 |
+| Insulin-like Growth Factor-1 | IGF-1 | nmol/L | 1.3–195 | 1.445–126.766 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30770 |
+| Lipoprotein (a) | LP-a | nmol/L | 5.76–189 | 3.8–189 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30790 |
+| Low Density Lipoprotein | LDL | mmol/L | 0.26–10.3 | 0.266–9.797 | Both | `b_ldl_direct` | `b_ldl_direct` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30780 |
+| Oestradiol | OEST | pmol/L | 73–17621 | 175–14588 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30800 |
+| Phosphate | PHOS | mmol/L | 0.32–6.4 | 0.369–4.702 | Both | `b_phosphate` | `b_phosphate` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30810 |
+| Rheumatoid Factor | RF | IU/mL | 10–120 | 10–120 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30820 |
+| Sex Hormone Binding Globulin | SHBG | nmol/L | 0.33–242 | 0.39–241.92 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30830 |
+| Testosterone | TEST | nmol/L | 0.35–55.52 | 0.35–54.342 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30850 |
+| Total Bilirubin | TBIL | µmol/L | 0–513 | 1.08–144.52 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30840 |
+| Total Protein | TP | g/L | 30–120 | 36.27–117.36 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30860 |
+| Triglyceride | TRIG | mmol/L | 0.1–11.3 | 0.231–11.278 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30870 |
+| Urea | UREA | mmol/L | 0.8–50 | 0.81–41.83 | Pilot only | `b_urea` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30670 |
+| Uric Acid | UA | µmol/L | 89–1785 | 89.1–1067.5 | HY only | `-` | `b_urate` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30880 |
+| Vitamin D | VITD | nmol/L | 10–375 | 10–362 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30890 |
+
+#### Glycated Haemoglobin (HbA1c)
+
+| Marker | Acronym | Units | Manufacturer/Analyzer Analytical Range (non-UKB) | UKB observed range | Model Panel | Pilot backend name | HY backend name | UKB source |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Glycated Haemoglobin | HbA1c | mmol/mol | 15–184 | 15–515.2 | HY only | `-` | `b_hba1c` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30750 |
+
+#### Haematology — Complete Blood Count (CBC)
+
+| Marker | Acronym | Units | Manufacturer/Analyzer Analytical Range (non-UKB) | UKB observed range | Model Panel | Pilot backend name | HY backend name | UKB source |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Haematocrit | HCT | % | — | 0.05–72.48 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30030 |
+| Haemoglobin Concentration | HGB | g/dL | 0.0–25.0 | 0.09–22.27 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30020 |
+| Mean Corpuscular Haemoglobin | MCH | pg | — | 0–95.67 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30050 |
+| Mean Corpuscular Haemoglobin Concentration | MCHC | g/dL | — | 10.7–97.3 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30060 |
+| Mean Corpuscular Volume | MCV | fL | 0.0–150.0 | 52.1–160.3 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30040 |
+| Mean Platelet Volume | MPV | fL | — | 5.73–16.5 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30100 |
+| Platelet crit | PCT | % | — | 0–1.445 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30090 |
+| Platelet count | PLT | ×10⁹/L | 0–3000 | 0.3–1821 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30080 |
+| Platelet Distribution Width | PDW | % | — | 13.27–20.2 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30110 |
+| Red Blood Cell count | RBC | ×10¹²/L | 0.00–8.00 | 0.006–7.911 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30010 |
+| Red Cell Distribution Width | RDW | % | — | 2.28–38.96 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30070 |
+| White Blood Cell count | WBC | ×10⁹/L | 0.00–400.00 | 0–389.7 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30000 |
+
+#### Haematology — Leukocyte Differential
+
+| Marker | Acronym | Units | Manufacturer/Analyzer Analytical Range (non-UKB) | UKB observed range | Model Panel | Pilot backend name | HY backend name | UKB source |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Basophil number | BA# | ×10⁹/L | 0.00–400.00 | 0–3.03 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30160 |
+| Basophil percent | BA% | % | 0–100 | 0–33.8 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30220 |
+| Eosinophil number | EO# | ×10⁹/L | 0.00–400.00 | 0–9.6 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30150 |
+| Eosinophil percent | EO% | % | 0–100 | 0–100 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30210 |
+| Lymphocyte number | LY# | ×10⁹/L | 0.00–400.00 | 0–196.41 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30120 |
+| Lymphocyte percent | LY% | % | 0–100 | 0–98.7 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30180 |
+| Monocyte number | MO# | ×10⁹/L | 0.00–400.00 | 0–113.39 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30130 |
+| Monocyte percent | MO% | % | 0–100 | 0–96.9 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30190 |
+| Neutrophil number | NE# | ×10⁹/L | 0.00–400.00 | 0–76.42 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30140 |
+| Neutrophil percent | NE% | % | 0–100 | 0–100 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30200 |
+
+#### Haematology — Reticulocytes
+
+| Marker | Acronym | Units | Manufacturer/Analyzer Analytical Range (non-UKB) | UKB observed range | Model Panel | Pilot backend name | HY backend name | UKB source |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| High Light Scatter Reticulocytes number | HLR# | ×10¹²/L | — | 0–0.6 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30300 |
+| High Light Scatter Reticulocytes percent | HLR% | % | — | 0–80 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30290 |
+| Immature Reticulocyte Fraction | IRF | Ratio | — | 0–1 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30280 |
+| Mean Reticulocyte Volume | MRV | fL | — | 46–249.45 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30260 |
+| Mean Sphered Cell Volume | MSCV | fL | — | 43.31–205.2 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30270 |
+| Reticulocyte number | RET# | ×10¹²/L | 0.0000–0.7500 | 0–2.433 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30250 |
+| Reticulocyte percent | RET% | % | 0.00–30.0 | 0–90.909 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30240 |
+
+#### Haematology — Nucleated Red Blood Cells (NRBC)
+
+| Marker | Acronym | Units | Manufacturer/Analyzer Analytical Range (non-UKB) | UKB observed range | Model Panel | Pilot backend name | HY backend name | UKB source |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Nucleated Red Blood Cell number | NRBC# | ×10⁹/L | — | 0–6.9 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30170 |
+| Nucleated Red Blood Cell percent | NRBC% | % | 0.0–600 | 0–81.97 | Collected | `-` | `-` | https://biobank.ndph.ox.ac.uk/ukb/field.cgi?id=30230 |
+
+## 5) B2B API Payload Guidance
+
+**All markers in this catalog MUST be sent by the B2B partner to Idunox in the API JSON payload.** Do not omit any fields.
+
+For each field, consult the **Internal details** column (Health Questionnaire) or **Model Panel** column (Blood Markers) for the correct value to send:
+
+- If a question is **Required** → A value is always sent (never null)
+- If a question is **Conditional** → A value is sent when the condition is met in the questionnaire flow; `null` is sent when the condition is not met (or the specified default value like `No` is sent)
+- If a question specifies **“auto-set”** → This field must still be included in the payload; the **partner’s system** should pre-populate the value based on the conditional logic in the Requirement/conditionality column (do not prompt the user to answer)
+
+**Example:** For the smoking questions in the intake form and B2B API submission:
+
+- Ask the end consumer: “In terms of cigarette smoking, which case are you?” (Required for all)
+- Send their answer to Idunox: `"Current smoker"`, `"Former smoker"`, or `"Never smoker"`
+- Ask the end consumer: “How often do you smoke cigarettes?” (Required if Current smoker; else don’t ask)
+- If Current smoker: send their answer to Idunox
+- If not Current smoker: send `"No"` to Idunox
+- Ask the end consumer: “In the past, how often have you smoked cigarettes?” (Required for Former smoker, or Current smoker with `How often do you smoke cigarettes? = Only occasionally`)
+- If Never smoker: do not ask; auto-set and send `"I have never smoked"` to Idunox
+- If Current smoker and `How often do you smoke cigarettes? = On most or all days`: do not ask; send `null` to Idunox
+- Otherwise: ask and send the end consumer’s answer to Idunox
+
+## 6) Markers that will be derived by our pipeline
+
+The following backend markers are computed by the pipeline from the API inputs above and do not map 1:1 to a single input field. **These are provided for information only — the B2B partner does not need to submit these values; Idunox derives them automatically from the inputs in Sections 2 and 4.**
+
+### Pilot-Specific Derived Features
+
+| Derived Feature | Calculation | Input Fields |
+| --- | --- | --- |
+| `b_ast_alt_ratio` | `AST / ALT` | AST, ALT |
+| `b_bun_creatinine_ratio` | `(Urea * 2.8) / Creatinine` | Urea, Creatinine |
+| `b_calcium_phosphate_product` | Calcium × Phosphate | Calcium, Phosphate |
+| `b_egfr_ckd_epi_2021_cr` | `Scr_mg_dL = Creatinine_umol_L / 88.4` `k = 0.7 (female), 0.9 (male)` `a = -0.241 (female), -0.302 (male)` `eGFR = 142 * min(Scr_mg_dL / k, 1)^a * max(Scr_mg_dL / k, 1)^(-1.200) * 0.9938^Age * (1.012 if female else 1)` | Creatinine, Age, Sex |
+| `b_ggt_alt_ratio` | `GGT / ALT` | GGT, ALT |
+| `b_ldl_hdl_ratio` | `LDL_Direct / HDL_Cholesterol` | LDL Direct, HDL Cholesterol |
+| `b_non_hdl_cholesterol` | `Total_Cholesterol - HDL_Cholesterol` | Total Cholesterol, HDL Cholesterol |
+| `lr_bmi` | `Weight_kg / (Height_cm / 100)^2` | Weight, Height |
+| `lr_ever_smoked_yes` | `Yes` if `smoking_status` in {`Current smoker`, `Former smoker`}, else `No` | Smoking status |
+| `lr_pack_years_of_smoking` | Case logic: `Never smoker` -> `0` `Current smoker` and `current_tobacco_smoking = On most or all days` -> `(current_daily_cigarettes / 20) * (Age - Age_started_smoking)` `Former smoker` and `past_tobacco_smoking = On most or all days` -> `(past_daily_cigarettes / 20) * (Age_stopped_smoking - Age_started_smoking)` Otherwise -> `0` | Current/past cigarettes, Start age, Stop age (for formers), Age |
+| `lr_smoking_duration_years` | Case logic: `Never smoker` -> `0` `Current smoker` and `current_tobacco_smoking = On most or all days` -> `Age - Age_started_smoking` `Former smoker` and `past_tobacco_smoking = On most or all days` -> `Age_stopped_smoking - Age_started_smoking` Otherwise -> `0` | Age, Start smoking age, Stop smoking age |
+
+### HY-Specific Derived Features
+
+| Derived Feature | Calculation | Input Fields |
+| --- | --- | --- |
+| `b_ast_to_alt_ratio` | `AST / ALT` | AST, ALT |
+| `b_calcium_corrected_by_albumin` | `Calcium + 0.02 * (40 - Albumin)` if `Albumin < 40` else `Calcium` | Calcium, Albumin |
+| `b_calcium_phosphate_product` | Calcium × Phosphate | Calcium, Phosphate |
+| `b_chol_hdl` | `HDL_Cholesterol` | HDL Cholesterol (pass-through) |
+| `b_chol_ldl` | `LDL_Direct` | LDL Direct (pass-through) |
+| `b_chol_non_hdl` | `Total_Cholesterol - HDL_Cholesterol` | Total Cholesterol, HDL Cholesterol |
+| `b_chol_remnant` | `Total_Cholesterol - LDL_Direct - HDL_Cholesterol` | Total Cholesterol, LDL Direct, HDL Cholesterol |
+| `b_chol_total` | `Total_Cholesterol` | Total Cholesterol (pass-through) |
+| `b_chol_total_to_hdl_ratio` | `Total_Cholesterol / HDL_Cholesterol` | Total Cholesterol, HDL Cholesterol |
+| `b_egfr_ckd_epi_2012_cys` | `Scys = CystatinC_mg_L` `eGFR = 133 * min(Scys / 0.8, 1)^(-0.499) * max(Scys / 0.8, 1)^(-1.328) * 0.996^Age * (0.932 if female else 1)` | Cystatin C, Age, Sex |
+| `b_ggt_to_alt_ratio` | `GGT / ALT` | GGT, ALT |
+| `b_ldl_hdl_ratio` | `LDL_Direct / HDL_Cholesterol` | LDL Direct, HDL Cholesterol |
+| `b_non_hdl_cholesterol` | `Total_Cholesterol - HDL_Cholesterol` | Total Cholesterol, HDL Cholesterol |
+| `lr_bmi` | `Weight_kg / (Height_cm / 100)^2` | Weight, Height |
+| `lr_ever_smoked_yes` | `Yes` if `smoking_status` in {`Current smoker`, `Former smoker`}, else `No` | Smoking status |
+| `lr_pack_years_of_smoking` | Case logic: `Never smoker` -> `0` `Current smoker` and `current_tobacco_smoking = On most or all days` -> `(current_daily_cigarettes / 20) * (Age - Age_started_smoking)` `Former smoker` and `past_tobacco_smoking = On most or all days` -> `(past_daily_cigarettes / 20) * (Age_stopped_smoking - Age_started_smoking)` Otherwise -> `0` | Current/past cigarettes, Start age, Stop age (for formers), Age |
+| `lr_smoking_duration_years` | Case logic: `Never smoker` -> `0` `Current smoker` and `current_tobacco_smoking = On most or all days` -> `Age - Age_started_smoking` `Former smoker` and `past_tobacco_smoking = On most or all days` -> `Age_stopped_smoking - Age_started_smoking` Otherwise -> `0` | Age, Start smoking age, Stop smoking age |
+
+### Notes on Derivation
+
+- **Ratios:** All ratio calculations treat division by zero as missing; if denominator is 0 or missing, result is `null`.
+- **Pack-years and smoking duration:** The duration component used by both `lr_pack_years_of_smoking` and `lr_smoking_duration_years` is calculated as years from start age to current age (current smokers) or to stop age (former smokers).
+- **eGFR formulas:** The exact CKD-EPI equations used above are race-free. Inputs are Age, Sex, and the corresponding biomarker (Creatinine or Cystatin C).
+- **Calcium correction:** For HY only; the albumin correction formula is applied when albumin levels suggest hypoalbuminaemia.

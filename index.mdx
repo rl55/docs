@@ -1,97 +1,80 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
+title: "iduScore partner documentation"
+description: "Integrate with the iduScore partner API: submissions, processing, webhooks, and wellbeing reports—built by Idunox."
 ---
 
-## Setting up
+**iduScore** (from [Idunox](https://iduscore.com)) helps people understand **wellbeing**—how well they are likely to feel and function day to day over the coming years—using **routine blood markers** and a **short lifestyle questionnaire**. Reports summarize **four areas** (cognitive, cardiovascular, respiratory, and renal) and a **long-horizon outlook** (on the order of 8–10 years), using machine-learning models trained on large research datasets such as the [UK Biobank](https://www.ukbiobank.ac.uk/).
 
-Get your documentation site up and running in minutes.
+As a **B2B partner**, you collect the agreed markers and answers, then use this site to implement the **partner JSON API**: authenticate, submit de-identified payloads, track jobs, receive **webhooks**, and retrieve **wellbeing-focused** results for your end users.
 
 <Card
-  title="Start here"
+  title="Partner quickstart"
   icon="rocket"
   href="/quickstart"
   horizontal
 >
-  Follow our three step quickstart guide.
+  API keys, health check, and the first steps to call `api.iduscore.com` from your environment.
 </Card>
 
-## Make it yours
+## Partner API at a glance
 
-Design a docs site that looks great and empowers your users.
+The API is a **partner-facing REST contract** for **Type A** (canonical JSON) submissions—not FHIR at ingestion. Typical flows:
+
+1. **Authenticate** every `/v1/*` request with `X-Api-Key` or `Authorization: Bearer` (see OpenAPI for details).
+2. **Submit** de-identified lab markers and/or report metadata; include non-empty **`x-correlation-id`** and **`Idempotency-Key`** on writes (`POST`).
+3. **Poll** submission and job endpoints, or implement **HTTPS webhooks** you register with the platform.
+4. **Fetch results** using the read APIs; responses use **IduScore wellbeing** language (stable outcome ids, plain-English labels, and optional notices).
+
+All resource identifiers are **tenant-scoped** to the credentials you use.
 
 <Columns cols={2}>
   <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
-  </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
-  </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
-  </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
+    title="B2B questionnaire & markers"
+    icon="book"
     href="/api-reference/introduction"
   >
-    Auto-generate API documentation from OpenAPI specifications.
+    What to ask end users, blood marker catalog, conditional flows, payload rules, and derived features—aligned with model inputs.
   </Card>
+  <Card
+    title="Submit a payload"
+    icon="paper-plane"
+    href="/api-reference/endpoint/submissions"
+  >
+    `POST` Type A JSON to start async processing (strict schemas; see OpenAPI for bodies and headers).
+  </Card>
+  <Card
+    title="Webhooks"
+    icon="link"
+    href="/api-reference/endpoint/webhook"
+  >
+    Outbound callbacks your stack must accept (payloads and headers for your implementers).
+  </Card>
+  <Card
+    title="Results & wellbeing outcomes"
+    icon="chart-line"
+    href="/api-reference/endpoint/results"
+  >
+    Retrieve scoring output and artifacts using the wellbeing-facing read models.
+  </Card>
+  <Card
+    title="OpenAPI (JSON)"
+    icon="brackets-curly"
+    href="/api-reference/endpoint/openapi"
+  >
+    Machine-readable contract; use alongside YAML from a running service when you need examples aligned with Type A.
+  </Card>
+
 </Columns>
 
-## Create beautiful pages
+## Product context (partner api integration)
 
-Everything you need to create world-class documentation.
+For how end users experience IduScore—report contents, science overview, and FAQs—see [iduscore.com](https://iduscore.com). Partner documentation here focuses on **contracts, headers, payloads, and operational behavior** of the API.
 
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
-  </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
-  </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
-  </Card>
-</Columns>
+<Note>
+  **Regulatory framing:** IduScore is **not a medical device** and is for **information and education**, not diagnosis or treatment decisions. Partners must present outputs appropriately to end users and follow applicable law and clinical guidance in their jurisdictions. See the [iduScore disclaimer](https://iduscore.com) on the public site for the full consumer-facing language.
+</Note>
 
-## Need inspiration?
+## Support
 
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+- **Email:** [support@iduscore.com](mailto:support@iduscore.com) for API access, onboarding, and integration questions.
+- **Website:** [iduscore.com](https://iduscore.com) for the consumer product and company information.
