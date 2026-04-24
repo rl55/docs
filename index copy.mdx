@@ -1,0 +1,80 @@
+---
+title: "For IduScore partners"
+description: "Integrate with the IduScore partner API: submissions, processing, webhooks, and wellbeing reports—built by Idunox."
+---
+
+**IduScore** (from [Idunox](https://iduscore.com)) helps people understand **wellbeing**—how well they are likely to feel and function day to day over the coming years—using **routine blood markers** and a **short lifestyle questionnaire**. Reports summarize **four areas** (cognitive, cardiovascular, respiratory, and renal) and a **long-horizon outlook** (on the order of 8–10 years), using machine-learning models trained on large research datasets such as the [UK Biobank](https://www.ukbiobank.ac.uk/).
+
+As a **B2B partner**, you collect the agreed markers and answers, then use this site to implement the **partner JSON API**: authenticate, submit de-identified payloads, track jobs, receive **webhooks**, and retrieve **wellbeing-focused** results for your end users.
+
+<Card
+  title="Partner quickstart"
+  icon="rocket"
+  href="/quickstart"
+  horizontal
+>
+  API keys, health check, and the first steps to call `api.iduscore.com` from your environment.
+</Card>
+
+## Partner API at a glance
+
+The API is a **partner-facing REST contract** for **Type A** (canonical JSON) submissions—not FHIR at ingestion. Typical flows:
+
+1. **Authenticate** every `/v1/*` request with `X-Api-Key` or `Authorization: Bearer` (see OpenAPI for details).
+2. **Submit** de-identified lab markers and/or report metadata; include non-empty **`x-correlation-id`** and **`Idempotency-Key`** on writes (`POST`).
+3. **Poll** submission and job endpoints, or implement **HTTPS webhooks** you register with the platform.
+4. **Fetch results** using the read APIs; responses use **IduScore wellbeing** language (stable outcome ids, plain-English labels, and optional notices).
+
+All resource identifiers are **tenant-scoped** to the credentials you use.
+
+<Columns cols={2}>
+  <Card
+    title="B2B questionnaire & markers"
+    icon="book"
+    href="/api-reference/introduction"
+  >
+    What to ask end users, blood marker catalog, conditional flows, payload rules, and derived features—aligned with model inputs.
+  </Card>
+  <Card
+    title="Submit a payload"
+    icon="paper-plane"
+    href="/api-reference/endpoint/submissions"
+  >
+    `POST` Type A JSON to start async processing (strict schemas; see OpenAPI for bodies and headers).
+  </Card>
+  <Card
+    title="Webhooks"
+    icon="link"
+    href="/api-reference/endpoint/webhook"
+  >
+    Outbound callbacks your stack must accept (payloads and headers for your implementers).
+  </Card>
+  <Card
+    title="Results & wellbeing outcomes"
+    icon="chart-line"
+    href="/api-reference/endpoint/results"
+  >
+    Retrieve scoring output and artifacts using the wellbeing-facing read models.
+  </Card>
+  <Card
+    title="OpenAPI (JSON)"
+    icon="brackets-curly"
+    href="/api-reference/endpoint/openapi"
+  >
+    Machine-readable contract; use alongside YAML from a running service when you need examples aligned with Type A.
+  </Card>
+
+</Columns>
+
+## Product context (partner api integration)
+
+For how end users experience IduScore—report contents, science overview, and FAQs—see [iduscore.com](https://iduscore.com). Partner documentation here focuses on **contracts, headers, payloads, and operational behavior** of the API.
+
+<Note>
+  **Regulatory framing:** IduScore is **not a medical device** and is for **information and education**, not diagnosis or treatment decisions. Partners must present outputs appropriately to end users and follow applicable law and clinical guidance in their jurisdictions. See the [IduScore disclaimer](https://iduscore.com) on the public site for the full consumer-facing language.
+</Note>
+
+## Support
+
+- **Email:** [support@iduscore.com](mailto:support@iduscore.com) for API access, onboarding, and integration questions.
+- **Website:** [iduscore.com](https://iduscore.com) for the consumer product and company information.
