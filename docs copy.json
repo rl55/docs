@@ -11,11 +11,27 @@
   "navigation": {
     "tabs": [
       {
-        "tab": "Coming soon",
+        "tab": "API reference",
         "groups": [
           {
-            "group": "Documentation",
-            "pages": ["index"]
+            "group": "API documentation",
+            "pages": [
+              "index",
+              "api-reference/introduction"
+            ]
+          },
+          {
+            "group": "Endpoint examples",
+            "pages": [
+              "api-reference/endpoint/health",
+              "api-reference/endpoint/openapi",
+              "api-reference/endpoint/partner-auth-probe",
+              "api-reference/endpoint/submissions",
+              "api-reference/endpoint/get_submissions",
+              "api-reference/endpoint/webhook",
+              "api-reference/endpoint/results"
+
+            ]
           }
         ]
       }
